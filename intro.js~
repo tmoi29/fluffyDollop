@@ -1,0 +1,10 @@
+var add = function (){
+    var element = document.getElementById("thelist");
+    var n = document.createElement("li");
+    n.innerText = "new item";
+    element.appendChild(n);
+};
+
+var b = document.getElementById("b");
+
+b.addEventListener("click", add);
