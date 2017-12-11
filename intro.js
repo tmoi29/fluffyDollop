@@ -113,5 +113,50 @@
 //     }
 // };
 
-del();
+//del();
 
+
+const arr = [1];
+
+var triangle = function(n){
+    if (n == 0){
+	return arr[0];
+    }
+    if (n == 1){
+	var line = new Array(1,1);
+	arr.push(line);
+	return line[0] + " " + line[1];
+    }
+    
+    else{
+	var last = arr[arr.length - 1];
+	var line = [1];
+	for (let i = 0; i < last.length - 1; i++) {
+            line.push(last[i]+last[i+1]); //add up the two # above
+        }
+	line.push(1);
+	arr.push(line);
+	var ret = "";
+	for (let i = 0; i < line.length; i++) {
+            ret += line[i] + " ";
+	    
+        }
+	return ret;
+    }
+};
+
+var squares = function (n){
+    var line = arr[n];
+    console.log(line);
+    var ret = 0;
+    for (let i = 0; i < line.length; i++) {
+        ret += line[i];
+    }
+    return ret;
+};
+
+triangle(0);
+triangle(1);
+triangle(2);
+console.log(triangle(3));
+console.log(squares(3));
