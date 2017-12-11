@@ -17,101 +17,132 @@
         }
     };
 
-    const heading = document.getElementById("h");
-    const originalHeadingText = heading.innerText;
+    (function firstList() {
 
-    const button = document.getElementById("b");
+        const heading = document.getElementById("h");
+        const originalHeadingText = heading.innerText;
 
-    const list = document.getElementById("thelist");
+        const button = document.getElementById("b");
 
-    // replace heading text w/ text of another element (a list item)
-    const replaceHeadingText = function() {
-        heading.innerText = this.innerText;
+        const list = document.getElementById("thelist");
+
+        // replace heading text w/ text of another element (a list item)
+        const replaceHeadingText = function() {
+            heading.innerText = this.innerText;
+        };
+
+        // restore heading text to original heading text
+        const restoreHeadingText = function() {
+            heading.innerText = originalHeadingText;
+        };
+
+        // remove an element (a list item)
+        const deleteSelf = function() {
+            this.remove();
+        };
+
+        // add all event listeners to an element (a list item)
+        const registerItem = function(item) {
+            item.addEventListener("mouseover", replaceHeadingText, false);
+            item.addEventListener("mouseout", restoreHeadingText, false);
+            item.addEventListener("click", deleteSelf, false);
+        };
+
+        // add another item to the list
+        const addItem = function() {
+            const item = document.createElement("li");
+            item.innerText = "item " + list.children.length;
+            registerItem(item);
+            list.appendChild(item);
+        };
+
+        // add event listeners to each list item
+        list.children.forEach(registerItem);
+
+        // set button to add another list item
+        button.addEventListener('click', addItem, false);
+
+    })();
+
+    /**
+     * A generator function that returns successive values for increasing unsigned integers.
+     *
+     * @callback Generator
+     * @param {Number} an unsigned integer
+     * @return {*}
+     */
+
+    /**
+     * Creates a <div> containing a button that adds items to a list showing successive calls to generator.
+     *
+     * @param {Generator} generator a generator function that takes an unsigned integer and returns the value
+     * @param {Boolean} showCall true if you want "<generator.name>(n) = " before each value
+     * @returns {HTMLDivElement} the <div>
+     */
+    const addSequence = function(generator, showCall) {
+        showCall = Boolean(showCall);
+
+        // add <br><hr><br> before new div
+        ["br", "hr", "br"]
+            .map(tag => document.createElement(tag))
+            .forEach(e => document.body.appendChild(e));
+
+        const div = document.createElement("div");
+        document.body.appendChild(div);
+
+        const list = document.createElement("ol");
+        div.appendChild(list);
+
+        let i = 0;
+
+        /**
+         * Adds the next (i++th) value returned by generator to the <ol> list.
+         */
+        const addItem = function() {
+            console.log("adding item");
+            const item = document.createElement("li");
+            if (showCall) {
+                item.innerText = generator.name + "(" + i + ") = ";
+            }
+            item.innerText += generator(i++).toString();
+            list.appendChild(item);
+        };
+
+        // create button, set text to function name, and add set onclick to addItem
+        const button = document.createElement("button");
+        div.appendChild(button);
+        button.innerText = generator.name;
+        button.addEventListener("click", addItem, false);
+
+        return div;
     };
 
-    // restore heading text to original heading text
-    const restoreHeadingText = function() {
-        heading.innerText = originalHeadingText;
+    /**
+     * Create a fibonacci closure that generates successive fibonacci numbers
+     * without re-computing them.
+     *
+     * @return {Generator} a function that generates successive fibonacci numbers
+     *          based on how many times it was called.
+     */
+    const fibonacciWrapper = function() {
+        let a = 0;
+        let b = 1;
+
+        /**
+         * @returns {Number} the next fibonacci number
+         */
+        return function fibonacci(n) {
+            const temp = a;
+            a = b;
+            b = a + temp;
+            return temp;
+        };
     };
 
-    // remove an element (a list item)
-    const deleteSelf = function() {
-        this.remove();
-    };
+    addSequence(function square(x) {
+        return x * x;
+    }, true);
 
-    // add all event listeners to an element (a list item)
-    const registerItem = function(item) {
-        item.addEventListener("mouseover", replaceHeadingText);
-        item.addEventListener("mouseout", restoreHeadingText);
-        item.addEventListener("click", deleteSelf);
-    };
-
-    // add another item to the list
-    const addItem = function() {
-        const item = document.createElement("li");
-        item.innerText = "item " + list.children.length;
-        registerItem(item);
-        list.appendChild(item);
-    };
-
-    // add event listeners to each list item
-    list.children.forEach(registerItem);
-
-    // set button to add another list item
-    button.addEventListener('click', addItem);
+    addSequence(fibonacciWrapper(), true);
 
 })();
-
-// //====Add Element====
-// const add = function() {
-//     const element = document.getElementById("thelist");
-//     const n = document.createElement("li");
-//     n.innerText = "new item";
-//     element.appendChild(n);
-//     apply();
-//     del();
-// };
-//
-// const b = document.getElementById("b");
-//
-// b.addEventListener("click", add);
-//
-// //====Hover Over====
-//
-// const h = document.getElementById("h");
-//
-// const hover = function() {
-//     h.innerText = this.innerText;
-// };
-//
-// const out = function() {
-//     h.innerText = "Hello World!";
-// };
-//
-// const apply = function() {
-//     const items = document.getElementsByTagName("li");
-//     for (const item of items) {
-//         item.addEventListener("mouseover", hover);
-//         item.addEventListener("mouseout", out);
-//     }
-// };
-//
-// apply();
-//
-// //====DELETE====
-//
-// const remove = function() {
-//     this.remove();
-//
-// };
-//
-//
-// const del = function() {
-//     const items = document.getElementsByTagName("li");
-//     for (const item of items) {
-//         item.addEventListener("click", remove);
-//     }
-// };
-
-del();
-
