@@ -9,6 +9,19 @@
 (function() {
     "use strict";
 
+    Object.prototype.print = function() {
+        console.log(this);
+    };
+
+    /**
+     * Turn tag names into HTML elements and append them to an HTML element.
+     *
+     * @param {HTMLElement} element the HTML element to append these newly created elements
+     */
+    Array.prototype.appendHtmlElementsTo = function(element) {
+        this.map(e => document.createElement(e)).forEach(e => element.appendChild(e));
+    };
+
     // iterate over an HTMLCollection as returned by element.children
     HTMLCollection.prototype.forEach = function(func) {
         const length = this.length;
@@ -17,8 +30,8 @@
         }
     };
 
-    Object.prototype.print = function() {
-        console.log(this);
+    HTMLElement.prototype.setClass = function(className) {
+        this.setAttribute("class", className);
     };
 
     (function firstList() {
@@ -66,7 +79,7 @@
         // set button to add another list item
         button.addEventListener('click', addItem, false);
 
-        document.body.appendChild(document.createElement("br"));
+        ["br"].appendHtmlElementsTo(document.body);
 
     })();
 
@@ -79,19 +92,22 @@
      */
 
     /**
+     * @callback HTMLElementCallback
+     */
+
+    /**
      * Creates a <div> containing a button that adds items to a list showing successive calls to generator.
      *
      * @param {Generator} generator a generator function that takes an unsigned integer and returns the value
      * @param {Boolean} showCall true if you want "<generator.name>(n) = " before each value
+     * @param {HTMLElementCallback} itemCallback applied to the each item when created
      * @returns {HTMLDivElement} the <div>
      */
-    const addSequence = function(generator, showCall) {
+    const addSequence = function(generator, showCall, itemCallback) {
         showCall = Boolean(showCall);
 
         // add <br><hr><br> before new div
-        ["br", "hr", "br"]
-            .map(tag => document.createElement(tag))
-            .forEach(e => document.body.appendChild(e));
+        ["br", "hr", "br"].appendHtmlElementsTo(document.body);
 
         const div = document.createElement("div");
         document.body.appendChild(div);
@@ -106,6 +122,7 @@
          */
         const addItem = function() {
             const item = document.createElement("li");
+            list.appendChild(item);
             if (showCall) {
                 item.innerText = generator.name + "(" + i + ") = ";
             }
@@ -115,7 +132,10 @@
             } else {
                 item.innerText += value.toString();
             }
-            list.appendChild(item);
+
+            if (itemCallback) {
+                itemCallback.apply(item);
+            }
         };
 
         // create button, set text to function name, and add set onclick to addItem
@@ -177,10 +197,8 @@
                 return pascalTriangleRowHelper(n - 1);
             }
             const line = Array(n);
-            line.print();
             pascalTriangle.push(line);
             line[0] = 1;
-            line.print();
             const prevRow = pascalTriangle[n - 1];
             for (let i = 1; i < n - 1; i++) {
                 line[i] = prevRow[i - 1] + prevRow[i];
@@ -191,7 +209,7 @@
 
         const sum = arr => arr.reduce((a, b) => a + b);
 
-        const formatPascalTriangleRow = true;
+        const formatPascalTriangleRow = false;
 
         return {
             triangle: function pascalTriangleRow(n) {
@@ -200,18 +218,19 @@
                 }
 
                 const div = document.createElement("div");
-                div.setAttribute("class", "pascal-triangle-row");
+                div.setClass("pascal-triangle-row");
                 // noinspection CommaExpressionJS
                 pascalTriangleRowHelper(n + 1)
                     .map(element => {
                         const elementDiv = document.createElement("div");
-                        elementDiv.setAttribute("class", "pascal-triangle-element");
+                        elementDiv.setClass("pascal-triangle-element");
                         elementDiv.innerText = element.toString();
                         return elementDiv;
                     })
                     .forEach(elementDiv => div.appendChild(elementDiv));
                 return div;
             },
+            formattedRows: formatPascalTriangleRow,
             powersOfTwo: function pascalTrianglePowersOfTwo(n) {
                 return sum(pascalTriangleRowHelper(n + 1));
             }
@@ -228,7 +247,6 @@
             n |= 0;
             let x = n;
             for (let i = 1; i < n; i++) {
-                x.print();
                 // noinspection JSSuspiciousNameCombination
                 x = Math.pow(n, x);
             }
@@ -244,6 +262,19 @@
         pascalTriangle.triangle,
         pascalTriangle.powersOfTwo,
         createPowerTowerGenerator(),
-    ].forEach(generator => addSequence(generator, generator !== pascalTriangle.triangle))
+    ].forEach(generator => {
+        if (generator === pascalTriangle.triangle) {
+            const div = addSequence(generator, false, !pascalTriangle.formattedRows ? null :
+                function itemCallback() {
+                    this.setClass("pascal-triangle-row");
+                }
+            );
+            div.setClass("pascal-triangle");
+        } else {
+            addSequence(generator, true, null);
+        }
+    });
+
+    Array(5).fill("br").appendHtmlElementsTo(document.body);
 
 })();
