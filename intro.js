@@ -17,6 +17,10 @@
         }
     };
 
+    Object.prototype.print = function() {
+        console.log(this);
+    };
+
     (function firstList() {
 
         const heading = document.getElementById("h");
@@ -62,6 +66,8 @@
         // set button to add another list item
         button.addEventListener('click', addItem, false);
 
+        document.body.appendChild(document.createElement("br"));
+
     })();
 
     /**
@@ -99,12 +105,16 @@
          * Adds the next (i++th) value returned by generator to the <ol> list.
          */
         const addItem = function() {
-            console.log("adding item");
             const item = document.createElement("li");
             if (showCall) {
                 item.innerText = generator.name + "(" + i + ") = ";
             }
-            item.innerText += generator(i++).toString();
+            const value = generator(i++);
+            if (value instanceof HTMLElement) {
+                item.appendChild(value);
+            } else {
+                item.innerText += value.toString();
+            }
             list.appendChild(item);
         };
 
@@ -117,14 +127,26 @@
         return div;
     };
 
+    const square = function(n) {
+        return n * n;
+    };
+
+    const triangleNumber = function(n) {
+        return (n * (n + 1)) >> 1;
+    };
+
+    const tetrahedralNumber = function(n) {
+        return (n * (n + 1) * (n + 2)) / 6;
+    };
+
     /**
-     * Create a fibonacci closure that generates successive fibonacci numbers
+     * Creates a fibonacci closure that generates successive fibonacci numbers
      * without re-computing them.
      *
      * @return {Generator} a function that generates successive fibonacci numbers
      *          based on how many times it was called.
      */
-    const fibonacciWrapper = function() {
+    const createFibonacciGenerator = function() {
         let a = 0;
         let b = 1;
 
@@ -139,55 +161,89 @@
         };
     };
 
-    addSequence(function square(x) {
-        return x * x;
-    }, true);
+    const createPascalTriangleGenerator = function() {
+        const pascalTriangle = [[1]];
 
-    addSequence(fibonacciWrapper(), true);
+        /**
+         * @param n the row number
+         * @returns {Array} nth row of the Pascal Triangle
+         */
+        const pascalTriangleRowHelper = function(n) {
+            n |= 0;
+            if (n < pascalTriangle.length) {
+                return pascalTriangle[n];
+            }
+            if (n > pascalTriangle.length) {
+                return pascalTriangleRowHelper(n - 1);
+            }
+            const line = Array(n);
+            line.print();
+            pascalTriangle.push(line);
+            line[0] = 1;
+            line.print();
+            const prevRow = pascalTriangle[n - 1];
+            for (let i = 1; i < n - 1; i++) {
+                line[i] = prevRow[i - 1] + prevRow[i];
+            }
+            line[n - 1] = 1;
+            return line;
+        };
+
+        const sum = arr => arr.reduce((a, b) => a + b);
+
+        const formatPascalTriangleRow = true;
+
+        return {
+            triangle: function pascalTriangleRow(n) {
+                if (!formatPascalTriangleRow) {
+                    return pascalTriangleRowHelper(n + 1).join(" ");
+                }
+
+                const div = document.createElement("div");
+                div.setAttribute("class", "pascal-triangle-row");
+                // noinspection CommaExpressionJS
+                pascalTriangleRowHelper(n + 1)
+                    .map(element => {
+                        const elementDiv = document.createElement("div");
+                        elementDiv.setAttribute("class", "pascal-triangle-element");
+                        elementDiv.innerText = element.toString();
+                        return elementDiv;
+                    })
+                    .forEach(elementDiv => div.appendChild(elementDiv));
+                return div;
+            },
+            powersOfTwo: function pascalTrianglePowersOfTwo(n) {
+                return sum(pascalTriangleRowHelper(n + 1));
+            }
+        };
+    };
+
+    const pascalTriangle = createPascalTriangleGenerator();
+
+    const createPowerTowerGenerator = function() {
+        /**
+         * @returns n ^ n n times in a power tower
+         */
+        return function powerTower(n) {
+            n |= 0;
+            let x = n;
+            for (let i = 1; i < n; i++) {
+                x.print();
+                // noinspection JSSuspiciousNameCombination
+                x = Math.pow(n, x);
+            }
+            return x;
+        };
+    };
+
+    [
+        square,
+        triangleNumber,
+        tetrahedralNumber,
+        createFibonacciGenerator(),
+        pascalTriangle.triangle,
+        pascalTriangle.powersOfTwo,
+        createPowerTowerGenerator(),
+    ].forEach(generator => addSequence(generator, generator !== pascalTriangle.triangle))
 
 })();
-
-const arr = [1];
-
-var triangle = function(n){
-    if (n == 0){
-	return arr[0];
-    }
-    if (n == 1){
-	var line = new Array(1,1);
-	arr.push(line);
-	return line[0] + " " + line[1];
-    }
-
-    else{
-	var last = arr[arr.length - 1];
-	var line = [1];
-	for (let i = 0; i < last.length - 1; i++) {
-            line.push(last[i]+last[i+1]); //add up the two # above
-        }
-	line.push(1);
-	arr.push(line);
-	var ret = "";
-	for (let i = 0; i < line.length; i++) {
-            ret += line[i] + " ";
-
-        }
-	return ret;
-    }
-};
-
-var squares = function (n){
-    var line = arr[n];
-    console.log(line);
-    var ret = 0;
-    for (let i = 0; i < line.length; i++) {
-        ret += line[i];
-    }
-    return ret;
-};
-
-triangle(0);
-triangle(1);
-triangle(2);
-console.log(triangle(3));
-console.log(squares(3));
